@@ -34,64 +34,38 @@ write "cccccccccccccccccccccccccccc" to 220
 
 label start
     var counter
-
-    // Let's move up
     write 195 to var:counter
-    label loop_move_up
-        copy var:counter to REG_A
-        write OP_INCR to REG_OP
-        cpu_exec
-        copy REG_RES to var:counter
 
-        copy var:counter to REG_A
-        write 21 to REG_B
-        write OP_ADD to REG_OP
-        cpu_exec
+    copy var:counter to REG_A
+    write 217 to REG_B
+    write OP_RENDER_BITMAP to REG_OP
+    cpu_exec
 
-        copy var:counter to REG_A
-        copy REG_RES to REG_B
-        write OP_RENDER_BITMAP to REG_OP
-        cpu_exec
+    write KEYBOARD_READ_CHAR_SILENTLY to REG_A
+    write OP_READ_INPUT to REG_OP
+    cpu_exec
 
-        write "0.1" to REG_A
-        write OP_NOP to REG_OP
-        cpu_exec
+    copy KEYBOARD_BUFFER to REG_A
+    write "d" to REG_B
+    write OP_CMP_EQ to REG_OP
+    cpu_exec
 
-        copy var:counter to REG_A
-        write 200 to REG_B
-        write OP_CMP_NEQ to REG_OP
-        cpu_exec
-        jump_if label:loop_move_up
+    jump_if label:shift_right
 
-    // let's move down
-    label loop_move_down
-        copy var:counter to REG_A
-        write OP_DECR to REG_OP
-        cpu_exec
-        copy REG_RES to var:counter
+    copy KEYBOARD_BUFFER to REG_A
+    write "a" to REG_B
+    write OP_CMP_EQ to REG_OP
+    cpu_exec
 
-        copy var:counter to REG_A
-        write 21 to REG_B
-        write OP_ADD to REG_OP
-        cpu_exec
+    jump_if label:shift_left
 
-        copy var:counter to REG_A
-        copy REG_RES to REG_B
-        write OP_RENDER_BITMAP to REG_OP
-        cpu_exec
+    copy KEYBOARD_BUFFER to REG_A
+    write "q" to REG_B
+    write OP_CMP_EQ to REG_OP
+    cpu_exec
 
-        write "0.1" to REG_A
-        write OP_NOP to REG_OP
-        cpu_exec
+    jump_if label:exit
 
-        write 196 to REG_A
-        copy var:counter to REG_B
-        write OP_CMP_LT to REG_OP
-        cpu_exec
-        jump_if label:loop_move_down
-
-    // let's shift bitmap to the right
-        write 200 to var:counter
     label shift_right
         write "c" to REG_A
         copy *var:counter to REG_B
@@ -109,9 +83,61 @@ label start
         write 217 to REG_B
         write OP_CMP_LT to REG_OP
         cpu_exec
+
+        copy var:counter to REG_A
+        write 217 to REG_B
+        write OP_RENDER_BITMAP to REG_OP
+        cpu_exec
+
+    
+    label shift_left
+        write *var:counter to REG_A
+        copy  "1" to REG_B
+        write "" to REG_C
+        write "" to REG_D
+        write OP_REPLACE_COLUMN to REG_OP
+        cpu_exec
+
+        copy REG_RES to *var:counter
+
+        copy var:counter to REG_A
+        write OP_INCR to REG_OP
+        cpu_exec
+        copy REG_RES to var:counter
+
+        copy var:counter to REG_A
+        write 217 to REG_B
+        write OP_CMP_LT to REG_OP
+        cpu_exec
+
+        copy var:counter to REG_A
+        write 217 to REG_B
+        write OP_RENDER_BITMAP to REG_OP
+        cpu_exec
+
+
+    label read_key
+        write KEYBOARD_READ_CHAR_SILENTLY to REG_A
+        write OP_READ_INPUT to REG_OP
+        cpu_exec
+        copy KEYBOARD_BUFFER to REG_A
+        write "a" to REG_B
+        write OP_CMP_EQ to REG_OP
+        cpu_exec
         jump_if label:shift_right
+        write "d" to REG_B
+        cpu_exec
+        jump_if label:shift_left
+        write "q" to REG_B
+        cpu_exec
+        jump_if label:exit
+        jump label:read_key
 
 jump label:start
+
+label exit
+    write OP_HALT to REG_OP
+    cpu_exec
 
 write OP_HALT to REG_OP
 cpu_exec
